@@ -1,6 +1,6 @@
 ﻿
 #import all modules
-$folders = @(Get-ChildItem  * -include *.psm1 -Recurse -ErrorAction SilentlyContinue )
+$folders = Get-ChildItem -Path $MyInvocation.MyCommand.Path -include *.psm1 -Recurse -Exclude Commvault.psm1
 Foreach ($folder in $folders)
 {
 

@@ -1,24 +1,19 @@
-﻿#Add CV module path to persistant PSModulePath.
+﻿
 
-#Reg path to PSModulePath
-#$regPath = ‘Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment’
-
-#get Current location
-$cwd = Get-Location
-
-#Save the current value in the $p variable.
+#Locate Current User powershell module directory.
+#Some additional logic would be needed to support this install in pwsh.
 $p = [Environment]::GetEnvironmentVariable("PSModulePath")
+$CurrentUserPath = $p -split ";" | Where-Object { $_ -like "*Documents\WindowsPowerShell*"}
+#TO DO: Update this next bit to read in PSD1 file to locate version number
+$CurrentUserPath = Join-Path -Path $CurrentUserPath -ChildPath "Commvault\1.0"
 
+#Get current working directory
+$LocalModulePath = Split-Path -Parent $MyInvocation.MyCommand.Path
+#Append the module directory so we only copy the PowerShell to export
+$CVModulePath = Join-Path -path $LocalModulePath -childpath "Module"
 
-#Add the paths in $p to the PSModulePath value.
-
-#$originalpaths = (Get-ItemProperty -Path $regPath -Name PSModulePath).PSModulePath
-# Add your new path to below after the ;
-#$newPath=$originalpaths+’;’+ $cwd
-
-#Set-ItemProperty -Path $regPath -Name PSModulePath –Value $newPath
-#Write-Verbose ("updated the env variable PSModulePath with value "+ $newPath)
-
-$CVModulePath = Join-Path -path $cwd -childpath "Get-CVModules.psm1"
-Import-Module $CVModulePath -Force -Global -Verbose
-Get-CVModules 
+if( -not (Test-Path $CurrentUserPath)){
+    New-Item -Path $CurrentUserPath -ItemType Directory
+}
+#Copy module as is to the Module Directory
+Get-ChildItem -Path $CVModulePath | Copy-Item -Destination $CurrentUserPath -Recurse -Force
